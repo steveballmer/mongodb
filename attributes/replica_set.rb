@@ -21,7 +21,7 @@ default['mongodb']['mongod']['port'] = 27017
 default['mongodb']['mongod']['bind_ip'] = '' # Leave blank to bind to all local and public IPs - in any case, make sure you list "127.0.0.1"!
 
 # Replica set node settings
-default['mongodb']['mongod']['replica_set'] = 'my_set'
+default['mongodb']['mongod']['replicaSet'] = 'my_set'
 
 default['mongodb']['mongod']['arbiter_only'] = false
 default['mongodb']['mongod']['build_indexes'] = true
@@ -32,4 +32,4 @@ default['mongodb']['mongod']['slave_delay'] = 0
 default['mongodb']['mongod']['votes'] = 1
 
 # Use the value of this property when setting the address for a given replica set node
-default['mongodb']['node_address_attribute'] = 'fqdn' # leave blank to use 'bind_ip' - can't both be blank!
+default['mongodb']['node_address_attribute'] = 'ipaddress' # leave blank to use 'bind_ip' - can't both be blank!

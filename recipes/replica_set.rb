@@ -16,7 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+require 'pry'
+include_recipe "hipsnip-mongodb::default"
 if Chef::Config[:solo]
   raise "Sorry - this recipe is for Chef Server only"
 end
@@ -24,8 +25,8 @@ end
 ::Chef::Recipe.send(:include, ::HipSnip::MongoDB::Helpers)
 
 include_recipe "hipsnip-mongodb::default"
-replica_set_name = node['mongodb']['mongod']['replica_set']
-
+replica_set_name = node['mongodb']['mongod']['replicaSet']
+Chef::Log.info "Found node associated to #{replica_set_name} in environment #{node.chef_environment}"
 hipsnip_mongodb_mongod "default" do
   port node['mongodb']['mongod']['port']
   bind_ip node['mongodb']['mongod']['bind_ip'] unless node['mongodb']['mongod']['bind_ip'].empty?
@@ -37,19 +38,25 @@ end
 # Look for existing nodes
 
 Chef::Log.info "Looking for Replica Set nodes..."
-replica_set_nodes = search("node", "mongodb_mongod_replica_set:#{replica_set_name} AND chef_environment:#{node.chef_environment}") || []
+replica_set_nodes = search("node", "mongodb_mongod_replicaSet:#{replica_set_name}")|| []
 Chef::Log.info "#{replica_set_nodes.length} node(s) found"
 
 Chef::Log.info "Generating member configuration for nodes" unless replica_set_nodes.empty?
 replica_set_members = replica_set_nodes.collect do |replica_set_node|
-  # only add ones with a member_id already set
+  # only add ones with a member_id already set
   if replica_set_node['mongodb']['mongod']['member_id']
     member_from_node(replica_set_node)
   else
     Chef::Log.warn "Node '#{node.name}' doesn't have a member_id - ignoring"
+    nil
   end
 end
 
+Chef::Log.info "Replica Set Members #{replica_set_members}"
+binding.pry
+replica_set_members = replica_set_members.compact # Remove the nils
+
+Chef::Log.info "Replica Set Members #{replica_set_members}"
 
 ############################
 # Member_id for this node
@@ -64,9 +71,18 @@ if node['mongodb']['mongod']['member_id']
 else
   Chef::Log.info "This node doesn't seem to have a member_id - setting one now"
 
-  member_id = if replica_set_members.empty? then 0
-              else replica_set_members.max_by{|m| m['id']}['id'] + 1
-              end
+  
+  member_id = Proc.new do |rs| 
+    if rs.empty? then  0
+    else 
+      max_id_node = rs.max_by{|m| m['id'] == nil  ? -1: m['id']} 
+      if (max_id_node.nil?)
+        0
+      else 
+        max_id_node['id'] + 1
+      end
+    end
+  end.call(replica_set_members)
 
   Chef::Log.info "Setting '#{member_id}' as new member_id for node"
   node.set['mongodb']['mongod']['member_id'] = member_id
@@ -75,6 +91,7 @@ else
 end
 
 
-hipsnip_mongodb_replica_set node['mongodb']['mongod']['replica_set'] do
+
+hipsnip_mongodb_replica_set node['mongodb']['mongod']['replicaSet'] do
   members replica_set_members
 end
