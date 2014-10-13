@@ -37,28 +37,31 @@ end
 # Look for existing nodes
 
 Chef::Log.info "Looking for Replica Set nodes..."
-replica_set_nodes = search("node", "mongodb_mongod_replicaSet:#{replica_set_name}")|| []
+search_string = node['mongodb']['mongod']['replicaSetMembership'] || "mongodb_mongod_replicaSet: #{replica_set_name} AND chef_environment: #{node.environment}"
+replica_set_nodes = search("node", search_string)|| []
 Chef::Log.info "#{replica_set_nodes.length} node(s) found"
 
 Chef::Log.info "Generating member configuration for nodes" unless replica_set_nodes.empty?
-replica_set_members = replica_set_nodes.collect do |replica_set_node|
+replica_set_members = replica_set_nodes.each_with_index.collect do |replica_set_node, index|
   # only add ones with a member_id already set
   if replica_set_node['mongodb']['mongod']['member_id']
     member_from_node(replica_set_node)
   else
-    Chef::Log.warn "Node '#{node.name}' doesn't have a member_id - ignoring"
-    nil
+    Chef::Log.warn "Node '#{node.name}' doesn't have a member_id - adding one from search"
+    if node == replica_set_node
+      node.set['mongodb']['mongod']['member_id'] = index
+      member_from_node(node)
+    end
   end
 end
 
 Chef::Log.info "Replica Set Members #{replica_set_members}"
-replica_set_members = replica_set_members.compact # Remove the nils
+#replica_set_members = replica_set_members.compact # Remove the nils
 
 Chef::Log.info "Replica Set Members #{replica_set_members}"
 
 ############################
 # Member_id for this node
-
 if node['mongodb']['mongod']['member_id']
   # Replace the stored details for this member node
   # Works around incomplete nodes being returned by search in Chef 11
@@ -87,7 +90,6 @@ else
 
   replica_set_members << member_from_node(node)
 end
-
 
 
 hipsnip_mongodb_replica_set node['mongodb']['mongod']['replicaSet'] do
