@@ -1,7 +1,9 @@
 default['mongodb']['mms_agent']['api_key'] = nil
+default['mongodb']['mms_agent']['group_id'] = nil
 default['mongodb']['mms_agent']['package_url'] = 'https://mms.mongodb.com/download/agent/%{agent_type}/mongodb-mms-%{agent_type}-agent'
 
-default['mongodb']['mms_agent']['monitoring']['version'] = '2.2.0.70-1'
+default['mongodb']['mms_agent']['monitoring']['version'] = '2.6.0.123-1'
+default['mongodb']['mms_agent']['monitoring']['mmsGroupId'] = node['mongodb']['mms_agent']['group_id']
 default['mongodb']['mms_agent']['monitoring']['mmsApiKey'] = node['mongodb']['mms_agent']['api_key']
 default['mongodb']['mms_agent']['monitoring']['mmsBaseUrl'] = 'https://mms.mongodb.com'
 default['mongodb']['mms_agent']['monitoring']['configCollectionsEnabled'] = true
