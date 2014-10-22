@@ -43,8 +43,7 @@ template '/etc/mongodb-mms/monitoring-agent.config' do
 end
 
 service 'mongodb-mms-monitoring-agent' do
-  provider Chef::Provider::Service::Upstart if node['mongodb']['apt_repo'] == 'ubuntu-upstart'
-  # restart is broken on rhel (MMS-1597)
+  provider Chef::Provider::Service::Upstart
   supports :start => true, :stop => true, :restart => true, :status => true
   action :nothing
 end
