@@ -31,6 +31,7 @@ hipsnip_mongodb_mongod "default" do
   port node['mongodb']['mongod']['port']
   bind_ip node['mongodb']['mongod']['bind_ip'] unless node['mongodb']['mongod']['bind_ip'].empty?
   replica_set replica_set_name
+  notifies :reload, "ohai[reload_ohai]", :immediately
 end
 
 
@@ -47,11 +48,13 @@ replica_set_members = replica_set_nodes.each_with_index.collect do |replica_set_
   # only add ones with a member_id already set
   if replica_set_node['mongodb']['mongod']['member_id']
     member_from_node(replica_set_node)
+    notifies :reload, "ohai[reload_ohai]", :immediately
   else
     Chef::Log.warn "Node '#{node.name}' doesn't have a member_id - adding one from search"
     if node == replica_set_node
       node.set['mongodb']['mongod']['member_id'] = index
       member_from_node(node)
+      notifies :reload, "ohai[reload_ohai]", :immediately
     end
   end
 end
@@ -95,4 +98,8 @@ end
 
 hipsnip_mongodb_replica_set node['mongodb']['mongod']['replicaSet'] do
   members replica_set_members
+end
+
+ohai "reload_ohai" do
+  action :nothing
 end
