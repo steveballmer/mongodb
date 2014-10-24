@@ -45,7 +45,7 @@ default['mongodb']['journal'] = true
 default['mongodb']['journal_commit_interval'] = 100 # ms
 
 # Logging
-default['mongodb']['syslog'] = true # Having this ON means all log entries will go to syslog rather than to the log file (version >2.1)
+default['mongodb']['syslog'] = false # Having this ON means all log entries will go to syslog rather than to the log file (version >2.1)
 default['mongodb']['log_append'] = true
 default['mongodb']['log_cpu'] = false
 default['mongodb']['log_verbose'] = false
@@ -93,5 +93,4 @@ default['mongodb']['gem_version']['bson_ext'] = '1.10.0'
 default['mongodb']['node_check']['retries'] = 3
 default['mongodb']['node_check']['timeout'] = 10 # seconds
 # @note - timeout is exponential - the actual timeout is retry*timeout
-
 

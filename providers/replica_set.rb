@@ -60,14 +60,15 @@ action :create do
       replica_set_initiated = true
     rescue ::Mongo::OperationFailure => ex
       # unless it's telling us to initiate the replica set
-      unless ex.message.include? 'run rs.initiate'
+      Chef::Log.error "Received error: #{ex.message}"
+      unless (ex.message.include? 'run rs.initiate' or   ex.message.include? 'EMPTYCONFIG')
         raise # re-raise the error - we want to know about it
       end
     end
   else
     begin
       connection = create_replica_set_connection(seed_list, replica_set_name, admin_user, admin_pass)
-      connection['admin'].command({'replSetGetStatus' => 1})
+      connection['admin'].command({'replSetGetStatus' => 1}) 
       replica_set_initiated = true
     rescue ::Mongo::ConnectionFailure => ex
       # unless it's telling us that these members don't form a replica set
@@ -233,6 +234,7 @@ action :create do
   # been initialised
 
   hipsnip_mongodb_user node['mongodb']['admin_user']['name'] do
+    Chef::Log.info "Creating admin user"
     password node['mongodb']['admin_user']['password']
     roles node['mongodb']['admin_user']['roles']
     database "admin"

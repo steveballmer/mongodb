@@ -65,7 +65,9 @@ action :create do
     # It appears that the Ruby driver does all the work for us here:
     # 1. If the user doesn't exist -> create it
     # 2. If the user exists -> update password and roles accordingly
-    db.add_user(username, password, false, "roles" => roles)
+    # Update by Prasanna: Changed "roles" to :roles because the driver expects that explicitly
+    # https://github.com/mongodb/mongo-ruby-driver/blob/1.x-stable/lib/mongo/db.rb#L699
+    db.add_user(username, password, false, :roles => roles)
   rescue ::Mongo::ConnectionFailure => ex
     # Expected error on first run of script
     unless ex.message.include? 'not master or secondary; cannot currently read from this replSet member'

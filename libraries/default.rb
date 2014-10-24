@@ -22,18 +22,19 @@ module HipSnip
     module Helpers
       def member_from_node(node)
         node_config = node['mongodb']['mongod']
-        host_address = if node['mongodb']['node_address_attribute'].empty?
-                         node_config['bind_ip'].split(",")[0]
-                       else node[node['mongodb']['node_address_attribute']]
-                       end
-
+        #host_address = if node['mongodb']['node_address_attribute'].empty?
+        #                 node_config['bind_ip'].split(",")[0]
+        #               else node[node['mongodb']['node_address_attribute']]
+        #               end
+        #node_address_attribute = node['mongodb']['node_address_attribute'] || 'ipaddress'
+        #host_address = node[node_address_attribute]
         {
           'id' => node_config['member_id'],
-          'host' => "#{host_address}:#{node_config['port']}",
+          'host' => "#{node['ipaddress']}:#{node_config['port']}",
           'arbiter_only' => node_config['arbiter_only'],
           'build_indexes' => node_config['build_indexes'],
           'hidden' => node_config['hidden'],
-          'priority' => node_config['priority'],
+          'priority' => node_config['hidden']? 0 : node_config['priority'] ,
           'tags' => node_config['tags'],
           'slave_delay' => node_config['slave_delay'],
           'votes' => node_config['votes']
