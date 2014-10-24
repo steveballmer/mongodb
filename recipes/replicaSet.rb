@@ -55,6 +55,7 @@ replica_set_members = replica_set_nodes.each_with_index.collect do |replica_set_
       node.set['mongodb']['mongod']['member_id'] = index
       member_from_node(node)
       notifies :reload, "ohai[reload_ohai]", :immediately
+      notifies :restart, "mongod", :immediately
     end
   end
 end
@@ -98,8 +99,14 @@ end
 
 hipsnip_mongodb_replica_set node['mongodb']['mongod']['replicaSet'] do
   members replica_set_members
+  notifies :reload, "ohai[reload_ohai]", :immediately
 end
 
 ohai "reload_ohai" do
+  action :nothing
+end
+
+service "mongod" do
+  supports :start => true, :stop => true, :restart => true, :status => true
   action :nothing
 end
